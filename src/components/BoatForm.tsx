@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Boat } from '@/types/boat';
 import { Anchor, Plus, Save } from 'lucide-react';
 
@@ -96,14 +97,17 @@ export const BoatForm: React.FC<BoatFormProps> = ({ onSubmit, selectedBoat, onCl
 
   return (
     <Card className="shadow-technical">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-primary">
-          <Anchor className="h-5 w-5" />
-          {selectedBoat ? 'Redigera båt' : 'Lägg till båt'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="boat-form">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-2 text-primary">
+              <Anchor className="h-5 w-5" />
+              {selectedBoat ? 'Redigera båt' : 'Lägg till båt'}
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="px-6 pb-6">
+              <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           {/* Boat Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Båtnamn</Label>
@@ -238,9 +242,12 @@ export const BoatForm: React.FC<BoatFormProps> = ({ onSubmit, selectedBoat, onCl
             >
               Rensa
             </Button>
-          </div>
-        </form>
-      </CardContent>
+              </div>
+              </form>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 };

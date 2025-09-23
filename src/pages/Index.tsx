@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BoatCanvas } from '@/components/BoatCanvas';
 import { BoatForm } from '@/components/BoatForm';
 import { BoatList } from '@/components/BoatList';
 import { CranePanel } from '@/components/CranePanel';
-import { Boat, Crane, Obstacle } from '@/types/boat';
+import { Boat } from '@/types/boat';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { BOATS, CRANES, OBSTACLES } from '@/pages/initData';
+
+
 const Index = () => {
-  const [boats, setBoats] = useState<Boat[]>(BOATS);
+  const [boats, setBoats] = useState<Boat[]>([]);
   const [selectedBoat, setSelectedBoat] = useState<Boat | undefined>();
+
+  useEffect(() => {
+    console.log('boats', boats);
+    BOATS.forEach(boat => {
+      const position = calculateOptimalPosition(boat);
+      const newBoat: Boat = {
+        ...boat,
+        position
+      };
+  
+      setBoats(prev => [...prev, newBoat]);
+    })
+  }, [BOATS]);
 
 
   const calculateOptimalPosition = (newBoat: Omit<Boat, 'id' | 'position'>) => {
@@ -18,7 +33,7 @@ const Index = () => {
       // First boat: 35cm + half width from origin
       return {
         x: 0.35 + newBoat.width / 2,
-        y: 20 // Default Y position
+        y: 80 // Default Y position
       };
     }
 
