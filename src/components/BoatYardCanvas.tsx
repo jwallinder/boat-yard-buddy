@@ -39,6 +39,23 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
   const [draggedBoat, setDraggedBoat] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [snapTarget, setSnapTarget] = useState<{ x: number; y: number; boatId?: string } | null>(null);
+  const [craneCirclesVisible, setCraneCirclesVisible] = useState<Record<string, boolean>>({});
+
+  // Initialize crane visibility state
+  React.useEffect(() => {
+    const initialVisibility: Record<string, boolean> = {};
+    cranes.forEach(crane => {
+      initialVisibility[crane.id] = true; // Default to visible
+    });
+    setCraneCirclesVisible(initialVisibility);
+  }, [cranes]);
+
+  const toggleCraneCircles = (craneId: string) => {
+    setCraneCirclesVisible(prev => ({
+      ...prev,
+      [craneId]: !prev[craneId]
+    }));
+  };
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = 'hsl(214, 20%, 90%)';
@@ -171,11 +188,17 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const drawCrane = (ctx: CanvasRenderingContext2D, crane: Crane, canLift: boolean) => {
+  const drawCrane = (ctx: CanvasRenderingContext2D, crane: Crane, canLift: boolean, craneIndex: number) => {
     const screenPos = worldToScreen(crane.position.x, crane.position.y);
     const size = 15 * zoom;
     
     const color = canLift ? 'hsl(120, 100.00%, 50.00%)' : 'hsl(0, 75%, 50%)';
+    
+    // Draw weight limit circles first (behind crane) - only if visible
+    if (craneCirclesVisible[crane.id]) {
+      drawCraneWeightCircles(ctx, crane, screenPos, craneIndex);
+    }
+    
     // Crane base
     ctx.fillStyle = color;
     ctx.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
@@ -193,6 +216,63 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     ctx.font = `${Math.max(8, 10 * zoom)}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(crane.name, screenPos.x, screenPos.y + size + 15);
+  };
+
+  const drawCraneWeightCircles = (ctx: CanvasRenderingContext2D, crane: Crane, screenPos: { x: number; y: number }, craneIndex: number) => {
+    // Sort capacity by distance (largest circles first)
+    const sortedCapacity = [...crane.capacityByDistance].sort((a, b) => b.distance - a.distance);
+    
+    // Define colors for each crane: red, blue, green, red
+    const craneColors = [
+      'hsl(0, 75%, 50%)',   // Red
+      'hsl(240, 75%, 50%)', // Blue
+      'hsl(120, 75%, 50%)', // Green
+      'hsl(0, 75%, 50%)'    // Red (for 4th crane)
+    ];
+    const craneColor = craneColors[craneIndex % craneColors.length];
+    
+    sortedCapacity.forEach((capacity, index) => {
+      const radius = capacity.distance * PIXELS_PER_METER * zoom;
+      
+      // Draw thin circle outline with crane-specific color
+      ctx.strokeStyle = craneColor;
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([]); // Solid line
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, radius, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // Add weight label at the edge of the circle
+      const labelAngle = (index * Math.PI * 2) / sortedCapacity.length; // Distribute labels around circle
+      const labelX = screenPos.x + Math.cos(labelAngle) * radius * 0.8;
+      const labelY = screenPos.y + Math.sin(labelAngle) * radius * 0.8;
+      
+      // Label background
+      const labelText = `${capacity.weight}t`;
+      ctx.font = `${Math.max(8, 10 * zoom)}px Inter, sans-serif`;
+      const textMetrics = ctx.measureText(labelText);
+      const labelPadding = 4 * zoom;
+      
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillRect(
+        labelX - textMetrics.width/2 - labelPadding,
+        labelY - 12 * zoom,
+        textMetrics.width + labelPadding * 2,
+        16 * zoom
+      );
+      
+      // Label text
+      ctx.fillStyle = 'hsl(214, 30%, 12%)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labelText, labelX, labelY);
+      
+      // Distance label
+      const distanceText = `${capacity.distance}m`;
+      ctx.font = `${Math.max(6, 8 * zoom)}px Inter, sans-serif`;
+      ctx.fillStyle = 'hsl(214, 30%, 30%)';
+      ctx.fillText(distanceText, labelX, labelY + 12 * zoom);
+    });
   };
 
   const drawObstacle = (ctx: CanvasRenderingContext2D, obstacle: Obstacle) => {
@@ -284,7 +364,7 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     
 
     // Draw cranes
-    sortedCranes.forEach(crane => drawCrane(ctx, crane.crane, crane.canLift));
+    sortedCranes.forEach((crane, index) => drawCrane(ctx, crane.crane, crane.canLift, index));
     
     // Draw boats
     boats.forEach(boat => drawBoat(ctx, boat));
@@ -294,7 +374,7 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     
     // Restore context
     ctx.restore();
-  }, [boats, cranes, obstacles, zoom, pan, selectedBoat, snapTarget, draggedBoat]);
+  }, [boats, cranes, obstacles, zoom, pan, selectedBoat, snapTarget, draggedBoat, craneCirclesVisible]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -393,6 +473,21 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Crane Circle Toggles */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        {cranes.map((crane, index) => (
+          <Button
+            key={crane.id}
+            variant={craneCirclesVisible[crane.id] ? "default" : "outline"}
+            size="sm"
+            onClick={() => toggleCraneCircles(crane.id)}
+            className="shadow-elevated text-xs"
+          >
+            {crane.name}
+          </Button>
+        ))}
       </div>
 
       {/* Scale indicator */}
