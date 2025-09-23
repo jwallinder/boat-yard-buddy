@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -57,6 +58,20 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        marina: {
+          success: "hsl(var(--marina-success))",
+          warning: "hsl(var(--marina-warning))",
+          motorboat: "hsl(var(--marina-motorboat))",
+          sailboat: "hsl(var(--marina-sailboat))",
+        },
+      },
+      backgroundImage: {
+        'gradient-maritime': 'var(--gradient-maritime)',
+        'gradient-technical': 'var(--gradient-technical)',
+      },
+      boxShadow: {
+        'technical': 'var(--shadow-technical)',
+        'elevated': 'var(--shadow-elevated)',
       },
       borderRadius: {
         lg: "var(--radius)",
