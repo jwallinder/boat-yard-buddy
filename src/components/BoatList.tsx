@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Boat } from '@/types/boat';
 import { Ship, Anchor, Phone, Trash2, MapPin } from 'lucide-react';
 
@@ -20,14 +21,16 @@ export const BoatList: React.FC<BoatListProps> = ({
 }) => {
   return (
     <Card className="shadow-technical">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-primary">
-          <Ship className="h-5 w-5" />
-          Båtlista ({boats.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="max-h-96 overflow-y-auto">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="boat-list">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-2 text-primary">
+              <Ship className="h-5 w-5" />
+              Båtlista ({boats.length})
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="max-h-96 overflow-y-auto">
           {boats.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground">
               <Anchor className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -99,8 +102,10 @@ export const BoatList: React.FC<BoatListProps> = ({
               ))}
             </div>
           )}
-        </div>
-      </CardContent>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 };
