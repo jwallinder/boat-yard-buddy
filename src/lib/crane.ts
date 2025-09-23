@@ -21,7 +21,6 @@ const checkCraneCapability = (crane: Crane, boat: Boat): CraneCapability => {
 };
 
 type CraneCapability = {
-
     canLift: boolean;
     actualDistance: number;
     maxDistance: number;

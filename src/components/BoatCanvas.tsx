@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Boat, Crane, Obstacle } from '@/types/boat';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cranesList, cranesSortedByDistance } from '@/lib/crane';
 
 interface CanvasProps {
   boats: Boat[];
@@ -24,6 +25,11 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
   onBoatMove,
   selectedBoat
 }) => {
+
+  const sortedCranes = selectedBoat
+    ? cranesSortedByDistance(cranes, selectedBoat)
+    : cranesList(cranes)
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -105,16 +111,17 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const drawCrane = (ctx: CanvasRenderingContext2D, crane: Crane) => {
+  const drawCrane = (ctx: CanvasRenderingContext2D, crane: Crane, canLift: boolean) => {
     const screenPos = worldToScreen(crane.position.x, crane.position.y);
     const size = 15 * zoom;
     
+    const color = canLift ? 'hsl(120, 100.00%, 50.00%)' : 'hsl(0, 75%, 50%)';
     // Crane base
-    ctx.fillStyle = 'hsl(0, 75%, 50%)';
+    ctx.fillStyle = color;
     ctx.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
     
     // Crane arm
-    ctx.strokeStyle = 'hsl(0, 75%, 50%)';
+    ctx.strokeStyle = color;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(screenPos.x, screenPos.y);
@@ -166,8 +173,9 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     // Draw obstacles
     obstacles.forEach(obstacle => drawObstacle(ctx, obstacle));
     
+
     // Draw cranes
-    cranes.forEach(crane => drawCrane(ctx, crane));
+    sortedCranes.forEach(crane => drawCrane(ctx, crane.crane, crane.canLift));
     
     // Draw boats
     boats.forEach(boat => drawBoat(ctx, boat));

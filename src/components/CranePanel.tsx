@@ -13,10 +13,11 @@ interface CranePanelProps {
 export const CranePanel: React.FC<CranePanelProps> = ({ cranes, selectedBoat }) => {
 
 
-  const sortedCranes = selectedBoat 
+  const sortedCranes = selectedBoat
     ? cranesSortedByDistance(cranes, selectedBoat)
     : cranesList(cranes)
-console.log("sortedCranes", sortedCranes);
+  console.log("sortedCranes", sortedCranes);
+
   return (
     <Card className="shadow-technical">
       <CardHeader className="pb-4">
@@ -40,17 +41,16 @@ console.log("sortedCranes", sortedCranes);
                 <p>Position: ({selectedBoat.position.x.toFixed(1)}m, {selectedBoat.position.y.toFixed(1)}m)</p>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <h4 className="font-medium">Kranar (sorterat efter avstånd):</h4>
               {sortedCranes.map(({ crane, canLift, actualDistance, maxDistance }) => (
                 <div
                   key={crane.id}
-                  className={`p-3 rounded-lg border ${
-                    canLift
+                  className={`p-3 rounded-lg border ${canLift
                       ? 'border-marina-success bg-marina-success/5'
                       : 'border-destructive bg-destructive/5'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ console.log("sortedCranes", sortedCranes);
                       </Badge>
                     </div>
                   </div>
-                  
+
                   <div className="text-sm space-y-1">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Avstånd:</span>
@@ -84,7 +84,7 @@ console.log("sortedCranes", sortedCranes);
                       </span>
                     </div>
                   </div>
-                  
+
                   {!canLift && (
                     <div className="mt-2 text-xs text-destructive">
                       Båten är {(actualDistance! - maxDistance).toFixed(1)}m utanför räckvidd
