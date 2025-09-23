@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Boat, Crane } from '@/types/boat';
 import { Wrench, AlertTriangle, CheckCircle } from 'lucide-react';
 import { cranesSortedByDistance, cranesList } from '@/lib/crane';
@@ -20,13 +21,16 @@ export const CranePanel: React.FC<CranePanelProps> = ({ cranes, selectedBoat }) 
 
   return (
     <Card className="shadow-technical">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-primary">
-          <Wrench className="h-5 w-5" />
-          Krananalys
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="crane-panel">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-2 text-primary">
+              <Wrench className="h-5 w-5" />
+              Krananalys
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="px-6 pb-6 space-y-4">
         {!selectedBoat ? (
           <div className="text-center text-muted-foreground py-6">
             <Wrench className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -95,7 +99,10 @@ export const CranePanel: React.FC<CranePanelProps> = ({ cranes, selectedBoat }) 
             </div>
           </>
         )}
-      </CardContent>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 };
