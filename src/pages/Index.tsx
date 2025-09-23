@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BoatCanvas } from '@/components/BoatCanvas';
+import { BoatCanvas } from '@/components/BoatYardCanvas';
 import { BoatForm } from '@/components/BoatForm';
 import { BoatList } from '@/components/BoatList';
 import { CranePanel } from '@/components/CranePanel';
