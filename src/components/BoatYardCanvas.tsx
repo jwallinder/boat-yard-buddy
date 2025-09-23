@@ -16,6 +16,8 @@ interface CanvasProps {
 const PIXELS_PER_METER = 10;
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 800;
+const SNAP_DISTANCE = 2; // meters
+const SNAP_GRID_SIZE = 1; // meters
 
 export const BoatCanvas: React.FC<CanvasProps> = ({
   boats,
@@ -36,6 +38,7 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [draggedBoat, setDraggedBoat] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [snapTarget, setSnapTarget] = useState<{ x: number; y: number; boatId?: string } | null>(null);
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
     ctx.strokeStyle = 'hsl(214, 20%, 90%)';
@@ -69,6 +72,74 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     x: (screenX / zoom - pan.x) / PIXELS_PER_METER,
     y: (screenY / zoom - pan.y) / PIXELS_PER_METER
   });
+
+  const calculateSnapPosition = (x: number, y: number, draggedBoatId: string) => {
+    const draggedBoatData = boats.find(b => b.id === draggedBoatId);
+    if (!draggedBoatData) return { x, y, snapTarget: null };
+
+    let snapX = x;
+    let snapY = y;
+    let snapTarget: { x: number; y: number; boatId?: string } | null = null;
+
+    // Snap to grid
+    const gridSnapX = Math.round(x / SNAP_GRID_SIZE) * SNAP_GRID_SIZE;
+    const gridSnapY = Math.round(y / SNAP_GRID_SIZE) * SNAP_GRID_SIZE;
+    
+    if (Math.abs(x - gridSnapX) < SNAP_DISTANCE / 2) {
+      snapX = gridSnapX;
+    }
+    if (Math.abs(y - gridSnapY) < SNAP_DISTANCE / 2) {
+      snapY = gridSnapY;
+    }
+
+    // Snap to other boats - side by side positioning
+    for (const boat of boats) {
+      if (boat.id === draggedBoatId) continue;
+
+      const distance = Math.sqrt(
+        Math.pow(x - boat.position.x, 2) + Math.pow(y - boat.position.y, 2)
+      );
+
+      if (distance < SNAP_DISTANCE * 2) {
+        // Calculate side-by-side positions
+        const totalWidth = (draggedBoatData.width + boat.width) / 2;
+        const totalLength = (draggedBoatData.length + boat.length) / 2;
+        
+        // Check which side is closer
+        const leftDistance = Math.abs(x - (boat.position.x - totalWidth));
+        const rightDistance = Math.abs(x - (boat.position.x + totalWidth));
+        const topDistance = Math.abs(y - (boat.position.y - totalLength));
+        const bottomDistance = Math.abs(y - (boat.position.y + totalLength));
+        
+        const minDistance = Math.min(leftDistance, rightDistance, topDistance, bottomDistance);
+        
+        if (minDistance < SNAP_DISTANCE) {
+          if (minDistance === leftDistance) {
+            // Snap to left side
+            snapX = boat.position.x - totalWidth;
+            snapY = boat.position.y;
+          } else if (minDistance === rightDistance) {
+            // Snap to right side
+            snapX = boat.position.x + totalWidth;
+            snapY = boat.position.y;
+          } else if (minDistance === topDistance) {
+            // Snap to top side
+            snapX = boat.position.x;
+            snapY = boat.position.y - totalLength;
+          } else {
+            // Snap to bottom side
+            snapX = boat.position.x;
+            snapY = boat.position.y + totalLength;
+          }
+          
+          snapTarget = { x: snapX, y: snapY, boatId: boat.id };
+          break;
+        }
+      }
+    }
+
+    return { x: snapX, y: snapY, snapTarget };
+  };
 
   const drawBoat = (ctx: CanvasRenderingContext2D, boat: Boat) => {
     const screenPos = worldToScreen(boat.position.x, boat.position.y);
@@ -154,6 +225,55 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     ctx.fillText(obstacle.name, screenPos.x, screenPos.y);
   };
 
+  const drawSnapIndicators = (ctx: CanvasRenderingContext2D) => {
+    if (!snapTarget || !draggedBoat) return;
+
+    const screenPos = worldToScreen(snapTarget.x, snapTarget.y);
+    const draggedBoatData = boats.find(b => b.id === draggedBoat);
+    
+    if (!draggedBoatData) return;
+    
+    // Draw snap target position outline
+    const snapWidth = draggedBoatData.width * PIXELS_PER_METER * zoom;
+    const snapHeight = draggedBoatData.length * PIXELS_PER_METER * zoom;
+    
+    ctx.strokeStyle = 'hsl(120, 100%, 50%)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 4]);
+    ctx.strokeRect(
+      screenPos.x - snapWidth/2, 
+      screenPos.y - snapHeight/2, 
+      snapWidth, 
+      snapHeight
+    );
+    ctx.setLineDash([]);
+
+    // Draw snap target crosshair
+    ctx.strokeStyle = 'hsl(120, 100%, 50%)';
+    ctx.lineWidth = 2;
+    const crosshairSize = 8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - crosshairSize, screenPos.y);
+    ctx.lineTo(screenPos.x + crosshairSize, screenPos.y);
+    ctx.moveTo(screenPos.x, screenPos.y - crosshairSize);
+    ctx.lineTo(screenPos.x, screenPos.y + crosshairSize);
+    ctx.stroke();
+    
+    // Draw connection line to target boat
+    const targetBoat = boats.find(b => b.id === snapTarget.boatId);
+    if (targetBoat) {
+      const targetScreenPos = worldToScreen(targetBoat.position.x, targetBoat.position.y);
+      ctx.strokeStyle = 'hsl(120, 100%, 50%)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x, screenPos.y);
+      ctx.lineTo(targetScreenPos.x, targetScreenPos.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -180,9 +300,12 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     // Draw boats
     boats.forEach(boat => drawBoat(ctx, boat));
     
+    // Draw snap indicators
+    drawSnapIndicators(ctx);
+    
     // Restore context
     ctx.restore();
-  }, [boats, cranes, obstacles, zoom, pan, selectedBoat]);
+  }, [boats, cranes, obstacles, zoom, pan, selectedBoat, snapTarget, draggedBoat]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -221,7 +344,9 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
     if (isDragging) {
       if (draggedBoat) {
         const worldPos = screenToWorld(x, y);
-        onBoatMove(draggedBoat, worldPos.x, worldPos.y);
+        const snapResult = calculateSnapPosition(worldPos.x, worldPos.y, draggedBoat);
+        setSnapTarget(snapResult.snapTarget);
+        onBoatMove(draggedBoat, snapResult.x, snapResult.y);
       } else {
         // Pan the canvas
         const deltaX = x - mousePos.x;
@@ -239,6 +364,7 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
   const handleMouseUp = () => {
     setIsDragging(false);
     setDraggedBoat(null);
+    setSnapTarget(null);
   };
 
   const handleZoom = (delta: number) => {
