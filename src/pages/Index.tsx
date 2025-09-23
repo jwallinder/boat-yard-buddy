@@ -7,78 +7,11 @@ import { Boat, Crane, Obstacle } from '@/types/boat';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-
+import { BOATS, CRANES, OBSTACLES } from '@/pages/initData';
 const Index = () => {
-  const [boats, setBoats] = useState<Boat[]>([]);
+  const [boats, setBoats] = useState<Boat[]>(BOATS);
   const [selectedBoat, setSelectedBoat] = useState<Boat | undefined>();
 
-  // Default cranes (example positions)
-  const cranes: Crane[] = [
-    {
-      id: 'crane-1',
-      name: 'Kran 1',
-      position: { x: 10, y: 10 },
-      capacityByDistance: [
-        { distance: 35, weight: 2 },
-        { distance: 27, weight: 3 },
-        { distance: 22, weight: 4 },
-        { distance: 20, weight: 5 },
-      ]
-    },
-    {
-      id: 'crane-2',
-      name: 'Kran 2',
-      position: { x: 50, y: 15 },
-      capacityByDistance: [
-        { distance: 35, weight: 2 },
-        { distance: 27, weight: 3 },
-        { distance: 22, weight: 4 },
-        { distance: 20, weight: 5 },
-      ]
-    },
-    {
-      id: 'crane-3',
-      name: 'Kran 3',
-      position: { x: 25, y: 60 },
-      capacityByDistance: [
-        { distance: 35, weight: 2 },
-        { distance: 27, weight: 3 },
-        { distance: 22, weight: 4 },
-        { distance: 20, weight: 5 },
-      ]
-    },
-    {
-      id: 'crane-4',
-      name: 'Kran 4',
-      position: { x: 70, y: 45 },
-      capacityByDistance: [
-        { distance: 35, weight: 2 },
-        { distance: 27, weight: 3 },
-        { distance: 22, weight: 4 },
-        { distance: 20, weight: 5 },
-      ]
-    }
-  ];
-
-  // Example obstacles
-  const obstacles: Obstacle[] = [
-    {
-      id: 'building-1',
-      name: 'Klubbhus',
-      position: { x: 15, y: 30 },
-      width: 8,
-      height: 12,
-      type: 'building'
-    },
-    {
-      id: 'tree-1',
-      name: 'Träd',
-      position: { x: 40, y: 25 },
-      width: 3,
-      height: 3,
-      type: 'tree'
-    }
-  ];
 
   const calculateOptimalPosition = (newBoat: Omit<Boat, 'id' | 'position'>) => {
     if (boats.length === 0) {
@@ -189,7 +122,7 @@ const Index = () => {
                 <Separator />
                 
                 <CranePanel 
-                  cranes={cranes}
+                  cranes={CRANES}
                   selectedBoat={selectedBoat}
                 />
               </div>
@@ -200,8 +133,8 @@ const Index = () => {
           <div className="lg:col-span-3">
             <BoatCanvas
               boats={boats}
-              cranes={cranes}
-              obstacles={obstacles}
+              cranes={CRANES}
+              obstacles={OBSTACLES}
               onBoatSelect={handleBoatSelect}
               onBoatMove={handleBoatMove}
               selectedBoat={selectedBoat}

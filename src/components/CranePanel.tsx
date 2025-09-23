@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Boat, Crane } from '@/types/boat';
 import { Wrench, AlertTriangle, CheckCircle } from 'lucide-react';
+import { cranesSortedByDistance, cranesList } from '@/lib/crane';
 
 interface CranePanelProps {
   cranes: Crane[];
@@ -10,35 +11,12 @@ interface CranePanelProps {
 }
 
 export const CranePanel: React.FC<CranePanelProps> = ({ cranes, selectedBoat }) => {
-  const checkCraneCapability = (crane: Crane, boat: Boat) => {
-    if (!boat) return { canLift: false, maxDistance: 0 };
-    
-    const distance = Math.sqrt(
-      Math.pow(boat.position.x - crane.position.x, 2) + 
-      Math.pow(boat.position.y - crane.position.y, 2)
-    );
-    
-    // Find the maximum distance the crane can lift this weight
-    const capability = crane.capacityByDistance.find(cap => boat.weight <= cap.weight);
-    const maxDistance = capability ? capability.distance : 0;
-    
-    return {
-      canLift: distance <= maxDistance,
-      actualDistance: distance,
-      maxDistance,
-      weight: boat.weight
-    };
-  };
+
 
   const sortedCranes = selectedBoat 
-    ? cranes
-        .map(crane => ({
-          crane,
-          ...checkCraneCapability(crane, selectedBoat)
-        }))
-        .sort((a, b) => (a.actualDistance || 0) - (b.actualDistance || 0))
-    : cranes.map(crane => ({ crane, canLift: false, actualDistance: 0, maxDistance: 0, weight: 0 }));
-
+    ? cranesSortedByDistance(cranes, selectedBoat)
+    : cranesList(cranes)
+console.log("sortedCranes", sortedCranes);
   return (
     <Card className="shadow-technical">
       <CardHeader className="pb-4">
