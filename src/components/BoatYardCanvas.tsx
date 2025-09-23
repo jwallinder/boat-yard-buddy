@@ -101,35 +101,24 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
       );
 
       if (distance < SNAP_DISTANCE * 2) {
-        // Calculate side-by-side positions
+        // Calculate horizontal side-by-side positions only
         const totalWidth = (draggedBoatData.width + boat.width) / 2;
-        const totalLength = (draggedBoatData.length + boat.length) / 2;
         
-        // Check which side is closer
+        // Check which horizontal side is closer
         const leftDistance = Math.abs(x - (boat.position.x - totalWidth));
         const rightDistance = Math.abs(x - (boat.position.x + totalWidth));
-        const topDistance = Math.abs(y - (boat.position.y - totalLength));
-        const bottomDistance = Math.abs(y - (boat.position.y + totalLength));
         
-        const minDistance = Math.min(leftDistance, rightDistance, topDistance, bottomDistance);
+        const minDistance = Math.min(leftDistance, rightDistance);
         
         if (minDistance < SNAP_DISTANCE) {
           if (minDistance === leftDistance) {
-            // Snap to left side
+            // Snap to left side - keep current Y position
             snapX = boat.position.x - totalWidth;
-            snapY = boat.position.y;
-          } else if (minDistance === rightDistance) {
-            // Snap to right side
-            snapX = boat.position.x + totalWidth;
-            snapY = boat.position.y;
-          } else if (minDistance === topDistance) {
-            // Snap to top side
-            snapX = boat.position.x;
-            snapY = boat.position.y - totalLength;
+            snapY = y; // Keep the dragged Y position
           } else {
-            // Snap to bottom side
-            snapX = boat.position.x;
-            snapY = boat.position.y + totalLength;
+            // Snap to right side - keep current Y position
+            snapX = boat.position.x + totalWidth;
+            snapY = y; // Keep the dragged Y position
           }
           
           snapTarget = { x: snapX, y: snapY, boatId: boat.id };
