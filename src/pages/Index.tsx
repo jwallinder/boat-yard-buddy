@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BoatCanvas } from '@/components/BoatYardCanvas';
 import { BoatForm } from '@/components/BoatForm';
 import { BoatList } from '@/components/BoatList';
+import { BoatPositionList } from '@/components/BoatPositionList';
 import { CranePanel } from '@/components/CranePanel';
 import { Boat } from '@/types/boat';
 import { Separator } from '@/components/ui/separator';
@@ -132,6 +133,12 @@ const Index = () => {
                   selectedBoat={selectedBoat}
                   onBoatSelect={handleBoatSelect}
                   onBoatDelete={handleBoatDelete}
+                />
+                
+                <Separator />
+                
+                <BoatPositionList 
+                  boats={boats}
                 />
                 
                 <Separator />
