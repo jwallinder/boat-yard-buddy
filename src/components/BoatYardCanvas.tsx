@@ -118,8 +118,8 @@ export const BoatCanvas: React.FC<CanvasProps> = ({
       );
 
       if (distance < SNAP_DISTANCE * 2) {
-        // Calculate horizontal side-by-side positions only
-        const totalWidth = (draggedBoatData.width + boat.width) / 2;
+        // Calculate horizontal side-by-side positions with 0.7m total padding (0.35m each side)
+        const totalWidth = (draggedBoatData.width + boat.width) / 2 + 0.7;
         
         // Check which horizontal side is closer
         const leftDistance = Math.abs(x - (boat.position.x - totalWidth));
